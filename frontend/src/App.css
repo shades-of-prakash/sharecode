@@ -1,0 +1,137 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@100..800&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
+:root {
+  --primary-color: white;
+  --secondary-color: black;
+}
+*{
+  box-sizing: border-box;
+  padding:0;
+  margin:0;
+  font-family: "Sora", sans-serif;
+}
+.flex {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.flex-direction {
+  flex-direction: column;
+}
+
+.flex-space {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.form-main {
+  height: 100dvh;
+}
+
+.form-main .wrapper {
+  height: 600px;
+  gap:32px;
+}
+
+.form-image {
+  width:500px;
+  height: inherit;
+}
+
+.form-image img {
+  width:500px;
+}
+
+.form {
+  width:500px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  padding:8px 50px;
+}
+.form p{
+  margin-top:12px;
+  margin-bottom:24px;
+  text-align: center;
+  font-size: 12px;
+}
+.form h1{
+  margin-bottom:12px;
+  text-align: center;
+}
+.form .input-field{
+  width:100%;
+  margin-top:16px;
+  position:relative;
+}
+.form .input-field button{
+  position:absolute;
+  top:35px;
+  right:10px;
+  background-color: transparent;
+  border:none;
+}
+.form .input-field input{
+  width:100%;
+  padding:15px;
+}
+.form .input-field label{
+  display: block;
+  margin-bottom:8px;
+  font-size: 12px;
+  color:black;
+}
+.error-border{
+  border:1px solid red;
+}
+.sucess-border{
+  border:1px solid green;
+}
+.forget{
+  margin-top:16px;
+  font-size: 14px;
+}
+.submit{
+  width:100%;
+  padding:15px;
+  background-color: var(--secondary-color);
+  color:var(--primary-color);
+  outline:none;
+  border:none;
+  margin:24px 0;
+  font-size:16px;
+}
+.submit:hover{
+  background-color: rgba(0, 0, 0,0.8);
+}
+.or hr{
+  height:1px;
+  width:200px;
+  border:0.5px solid rgba(0,0,0,0.2);
+}
+.or span{
+  margin:0px 10px;
+  color:grey;
+}
+.another-login-methods img{
+  width:50px;
+  height:50px;
+}
+.google{
+  width:100%;
+  padding:15px;
+  background-color: var(--secondary-color);
+  color:var(--primary-color);
+  outline:none;
+  border:none;
+  margin-top:24px;
+}
+.google img{
+  width:20px;
+  height:20px;
+  margin-right:10px;
+}
+.error{
+  color: rgba(255, 0, 0, 0.645);
+  margin-top:16px;
+  font-size:12px;
+}
