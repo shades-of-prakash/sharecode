@@ -1,84 +1,159 @@
 import { Form, useActionData } from "react-router-dom";
 import eyeOpen from "../assets/eye_open.svg";
 import eyeClose from "../assets/eye_close.svg";
-import { useState } from "react";
+import wrong from "../assets/wrong.svg";
+import tick from "../assets/tick-check.svg";
+import { useState, useEffect, useCallback } from "react";
 const Signup = () => {
-	const errorData = useActionData();
+	const formData = useActionData();
 	const [showPassword, setShowPassword] = useState(false);
-	const [showDetails, setShowDetails] = useState(false);
-
+	const [showCond, setShowCond] = useState(false);
+	const [isUser, setIsUser] = useState(false);
+	const [isCheckingUser, setIsCheckingUser] = useState(false);
+	const [hasStartedTyping, setHasStartedTyping] = useState(false);
+	const [passwordValidations, setPasswordValidations] = useState({
+		length: false,
+		number: false,
+		special: false,
+		uppercase: false,
+	});
 	function handleEye(e) {
 		e.preventDefault();
 		setShowPassword(!showPassword);
 	}
+	function handlePassCond(e) {
+		e.preventDefault();
+		setShowCond(!showCond);
+	}
 
+	function checkPassword(pass) {
+		const password = pass;
+		let len = password.length >= 8;
+		let num = /[0-9]/.test(password);
+		let sp = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+		let up = /[A-Z]/.test(password);
+		setPasswordValidations({
+			length: len,
+			number: num,
+			special: sp,
+			uppercase: up,
+		});
+	}
+	const checkUser = useCallback(
+		debounce(async (username) => {
+			try {
+				if (!username) {
+					setHasStartedTyping(false);
+					setIsUser(false);
+					return;
+				}
+				setIsCheckingUser(true);
+				const response = await fetch(
+					"http://localhost:3000/api/auth/checkuser",
+					{
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({ username }),
+					}
+				);
+				const data = await response.json();
+				console.log(data);
+				setIsUser(data.user !== false);
+			} catch (error) {
+				console.log(error);
+			} finally {
+				setIsCheckingUser(false);
+			}
+		})
+	);
+	function debounce(cb, delay = 1000) {
+		let timeOut;
+		return (...args) => {
+			clearTimeout(timeOut);
+			timeOut = setTimeout(() => {
+				cb(...args);
+			}, delay);
+		};
+	}
 	return (
-		<Form method="post" action="/auth/signup" className="form">
+		<Form method="post" action="/signup" className="form">
 			<p>Share</p>
 			<h1>Welcome Back!</h1>
 			<p>Reconnect and Start Chatting with Your Friends</p>
 			<div className="input-field">
-				<label htmlFor="email">Username</label>
 				<input
 					type="text"
-					placeholder="johndoe@gmail.com"
-					name="email"
+					name="username"
+					onChange={(e) => {
+						setHasStartedTyping(true);
+						checkUser(e.target.value);
+					}}
 					className={
-						errorData && (errorData.code === "eic" || errorData.code === "epic")
-							? "error-border"
+						hasStartedTyping && !isCheckingUser
+							? isUser
+								? "error-border"
+								: "sucess-border"
 							: ""
 					}
 					required
 				/>
+				<label htmlFor="username">Username</label>
+				{hasStartedTyping && !isCheckingUser && (
+					<img
+						src={isUser ? wrong : tick}
+						alt={isUser ? "User exists" : "User does not exist"}
+					/>
+				)}
 			</div>
-			{errorData && (errorData.code === "eic" || errorData.code === "epic") && (
-				<div className="error">{errorData?.error || errorData?.emaiError}</div>
-			)}
+			{isUser && <span>The username is not available</span>}
 			<div className="input-field">
-				<label htmlFor="password">Password</label>
 				<input
 					type={showPassword ? "text" : "password"}
-					placeholder="Johndoe@344"
 					name="password"
-					onFocus={() => setShowDetails(true)}
-					className={
-						errorData && (errorData.code === "pic" || errorData.code === "epic")
-							? "error-border"
-							: ""
-					}
+					className={formData?.message === false ? "error-border" : ""}
+					onFocus={(e) => handlePassCond(e)}
+					onBlur={(e) => checkPassword(e.target.value)}
 					required
 				/>
-				<button onClick={handleEye} type="button">
-					<img
-						src={showPassword ? eyeClose : eyeOpen}
-						alt="Toggle visibility"
-					/>
-				</button>
+				<label htmlFor="password">Password</label>
+				<img
+					src={showPassword ? eyeClose : eyeOpen}
+					alt="Toggle visibility"
+					onClick={handleEye}
+				/>
 			</div>
-			{errorData && (errorData.code === "pic" || errorData.code === "epic") && (
-				<div className="error">{errorData?.error || errorData?.passError}</div>
+			{passwordValidations && (
+				<ul className="pass-cond">
+					<li>
+						<img src={tick}></img>password must be over 8 characters
+					</li>
+					<li>
+						<img src={tick}></img>password must contain 1 number
+					</li>
+					<li>
+						<img src={wrong}></img>password must contain 1 special number
+					</li>
+					<li>
+						<img src={tick}></img>password must contain 1 uppercase
+					</li>
+				</ul>
 			)}
-			{showDetails && <div className="pass_cons"></div>}
-			<div className="flex-space forget">
-				<label htmlFor="remember" className="flex-space" style={{ gap: "4px" }}>
-					<input type="checkbox" id="remember" />
-					Remember me
-				</label>
-				<a href="/forget-password">
-					<label htmlFor="forget-password">Forget password?</label>
-				</a>
-			</div>
-			<button className="submit" type="submit">
+			<button
+				className={isUser ? "disable-submit" : "submit"}
+				type="submit"
+				disabled={isUser ? true : false}
+			>
 				Sign in
 			</button>
 			<p style={{ marginTop: "20px" }}>
-				Don&apos;t have an account?
-				<a href="/signup" style={{ marginLeft: "4px" }}>
-					Create account
+				Do you already have an account?
+				<a href="/login" style={{ marginLeft: "4px" }}>
+					signin
 				</a>
 			</p>
 		</Form>
 	);
 };
-
 export default Signup;

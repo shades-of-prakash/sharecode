@@ -1,51 +1,75 @@
 const bcrypt = require("bcrypt");
 const db = require("../config/db.js");
+const jwt = require("jsonwebtoken");
+
 async function signup(req, res) {
-	const { email, hashedPassword } = req.body;
+	const { username, hashedPassword } = req.body;
 	try {
-		const sucess = await db.execute(
-			"insert into users (email,hashed_password) values(?,?)",
-			[email, hashedPassword]
+		const success = await db.execute(
+			"INSERT INTO users (username, hashed_password) VALUES (?, ?)",
+			[username, hashedPassword]
 		);
-		if (sucess[0].affectedRows == 1) {
-			res.json({ sucess: "user is sucessfully created" });
+		if (success[0].affectedRows === 1) {
+			res.json({ success: "User is successfully created" });
 		} else {
-			res.json({ error: "bhjsuhv" });
+			res.json({ error: "User creation failed" });
 		}
 	} catch (error) {
 		console.log(error);
 		res.json(error);
 	}
 }
+
 async function signin(req, res) {
-	const { email, password } = req.body;
+	const { username, password } = req.body;
 	try {
 		const [rows] = await db.execute(
-			"SELECT email,hashed_password FROM users where email = ?",
-			[email]
+			"SELECT username, hashed_password FROM users WHERE username = ?",
+			[username]
 		);
-		const isMatch = await bcrypt.compare(password, rows[0].hashed_password);
 		if (rows.length === 0) {
-			// User not found
-			return res.status(400).json({ message: "email-is-not-found" });
+			return res.status(401).send({
+				accessToken: null,
+			});
 		}
-		if (rows.length === 0 && !isMatch) {
-			return res
-				.status(400)
-				.json({ message: "email-and-password-are-incorrect" });
+		const isMatch = await bcrypt.compare(password, rows[0].hashed_password);
+		if (!isMatch) {
+			return res.status(401).send({
+				accessToken: null,
+				password: false,
+			});
 		}
-		if (isMatch) {
-			// Password matches
-			return res.status(200).json({ message: "password-is-correct" });
+		const token = jwt.sign({ id: rows[0].username }, "shadesofprakash", {
+			expiresIn: 86400,
+		});
+
+		res.status(200).send({
+			accessToken: token,
+		});
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: "Server error" });
+	}
+}
+async function checkUser(req, res) {
+	const { username } = req.body;
+	console.log(req.body);
+	try {
+		const [rows] = await db.execute("select * from users where username=?", [
+			username,
+		]);
+		if (rows && rows[0]?.username) {
+			res.status(401).json({ user: true });
 		} else {
-			// Password does not match
-			return res.status(401).json({ message: "password-is-incorrect" });
+			res.status(200).json({ user: false });
 		}
 	} catch (error) {
-		res.status(500).json({ message: "Server error" });
+		console.log(error);
+		res.send({ error: error });
 	}
 }
 module.exports = {
 	signup,
 	signin,
+	checkUser,
 };
